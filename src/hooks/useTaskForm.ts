@@ -37,16 +37,17 @@ export function useTaskForm({ projectId, onSuccess }: UseTaskFormOptions = {}) {
     setError(null)
 
     try {
+      const assigneeId = assigneeID.trim() ? Number(assigneeID) : null
       const payload = {
         title: title.trim(),
         description: description.trim() || undefined,
         status,
         priority: priority.trim() || 'MED',
-        assigneeID: assigneeID.trim() || undefined,
+        assigneeId: Number.isInteger(assigneeId) ? assigneeId : null,
         dueDate: dueDate.trim() || new Date().toISOString().slice(0, 10),
       }
 
-      await createTask(projectId, payload as any)
+      await createTask(projectId, payload)
       reset()
       onSuccess?.()
     } catch (err) {

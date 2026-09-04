@@ -4,7 +4,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import type { TaskStatus } from '../types'
+import type { TaskStatus, User } from '../types'
 
 interface TaskFormProps {
   title: string
@@ -17,6 +17,7 @@ interface TaskFormProps {
   setPriority: (value: string) => void
   assigneeID: string
   setAssignee: (value: string) => void
+  users?: User[]
   dueDate: string
   setDueDate : (value:string) => void
   submitting: boolean
@@ -36,6 +37,7 @@ export function TaskForm({
   setPriority,
   assigneeID,
   setAssignee,
+  users = [],
   dueDate,
   setDueDate,
   submitting,
@@ -88,12 +90,20 @@ export function TaskForm({
         <MenuItem value="DONE">DONE</MenuItem>
       </TextField>
       <TextField
-        label="Encargado (ID)"
+        select
+        label="Responsable"
         value={assigneeID}
         onChange={(e) => setAssignee(e.target.value)}
         fullWidth
-        placeholder="Opcional"
-      />
+        helperText="Opcional"
+      >
+        <MenuItem value="">Sin asignar</MenuItem>
+        {users.map((user) => (
+          <MenuItem key={user.id} value={String(user.id)}>
+            {user.username} ({user.email})
+          </MenuItem>
+        ))}
+      </TextField>
       <TextField
         label="Fecha límite"
         type="date"

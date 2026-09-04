@@ -21,6 +21,7 @@ import EditOutlined from '@mui/icons-material/EditOutlined'
 import { useState } from 'react'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { TaskForm } from '../components/TaskForm'
+import { REGISTERED_USERS } from '../config/users'
 import { useToast } from '../context/ToastContext'
 import { getApiErrorMessage } from '../services/httpClient'
 import { useProjects } from '../hooks/useProjects'
@@ -36,6 +37,13 @@ function getPriorityColor(priority: string): 'success' | 'warning' | 'error' | '
   if (priority === 'MED') return 'warning'
   if (priority === 'LOW') return 'success'
   return 'default'
+}
+
+function getAssigneeLabel(assigneeId: string | number | null | undefined): string {
+  if (!assigneeId) return 'Sin asignar'
+
+  const user = REGISTERED_USERS.find((item) => String(item.id) === String(assigneeId))
+  return user ? `${user.username} (${user.email})` : `ID ${assigneeId}`
 }
 
 export function ProjectDetailsPage() {
@@ -83,7 +91,7 @@ const handleDeleteTask = async (taskId: number) => {
     setEditingTitle(task.title)
     setEditingDescription(task.description ?? '')
     setEditingPriority(task.priority)
-    setEditingAssigneeID(String(task.assigneeID ?? ''))
+    setEditingAssigneeID(String(task.assigneeId ?? task.assigneeID ?? ''))
     setEditingDueDate(task.dueDate ?? '')
     setEditingStatus(task.status ?? 'TODO')
   }
@@ -370,7 +378,7 @@ const handleDeleteTask = async (taskId: number) => {
 
                         <Stack spacing={0.25} sx={{ mt: 1.5 }}>
                           <Typography variant="caption" color="text.secondary">
-                            Encargado: {task.assigneeID || 'Sin asignar'}
+                            Encargado: {getAssigneeLabel(task.assigneeId ?? task.assigneeID)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             Fecha límite: {task.dueDate || 'Sin fecha'}
@@ -408,7 +416,10 @@ const handleDeleteTask = async (taskId: number) => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <TaskForm {...taskForm} assigneeID={taskForm.assigneeID} />
+            <TaskForm
+              {...taskForm}
+              users={REGISTERED_USERS}
+            />
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
               <Button
                 onClick={() => setIsTaskFormOpen(false)}
@@ -463,11 +474,19 @@ const handleDeleteTask = async (taskId: number) => {
               <MenuItem value="DONE">DONE</MenuItem>
             </TextField>
             <TextField
-              label="Encargado (ID)"
+              select
+              label="Responsable"
               value={editingAssigneeID}
               onChange={(event) => setEditingAssigneeID(event.target.value)}
               fullWidth
-            />
+            >
+              <MenuItem value="">Sin asignar</MenuItem>
+              {REGISTERED_USERS.map((user) => (
+                <MenuItem key={user.id} value={String(user.id)}>
+                  {user.username} ({user.email})
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="Fecha límite"
               type="date"

@@ -21,3 +21,16 @@ export async function login(username: string, password: string): Promise<string>
   )
   return data.token
 }
+
+export async function register(
+  username: string,
+  email: string,
+  password: string,
+): Promise<void> {
+  await axios.post(`${getApiBaseUrl()}/auth/register`, {
+    username: username.trim(),
+    email: email.trim(),
+    password,
+  })
+}
+

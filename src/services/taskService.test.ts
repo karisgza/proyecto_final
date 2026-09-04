@@ -57,7 +57,7 @@ describe('taskService', () => {
       title: 'New task',
       status: 'TODO' as const,
       priority: 'MED',
-      assigneeID: '',
+      assigneeId: null,
       dueDate: '2026-09-04',
     }
     vi.mocked(httpClient.post).mockResolvedValue({ data: task } as never)

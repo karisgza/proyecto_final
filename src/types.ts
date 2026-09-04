@@ -2,6 +2,12 @@ export interface AuthResponse {
   token: string
 }
 
+export interface User {
+  id: number
+  username: string
+  email: string
+}
+
 export interface Project {
   id: number
   name: string
@@ -29,16 +35,17 @@ export interface Task {
   status?: TaskStatus
   priority: string
   assigneeID: string
+  assigneeId?: number | null
   dueDate: string
 }
 
 export interface NewTask {
-   title: string
-   description?: string
+  title: string
+  description?: string
   status: TaskStatus
-   priority: string
-   assigneeID: string
-   dueDate: string
+  priority: string
+  assigneeId?: number | null
+  dueDate: string
 }
 
 export interface UpdateTaskRequest {

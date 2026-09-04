@@ -86,6 +86,8 @@ src/
 - `taskService`: lista las tareas de un proyecto, crea tareas, actualiza tareas y estados, y elimina tareas.
 - `httpClient`: cliente Axios con URL base dinamica, encabezado JSON y autenticacion Bearer.
 
+Los responsables disponibles para nuevas tareas se mantienen en `src/config/users.ts`. Esta lista es estatica porque la API actual no ofrece un endpoint para listar usuarios. Si se registra otro usuario y debe aparecer como responsable, hay que agregarlo manualmente con su ID, usuario y email.
+
 ### Hooks principales
 
 - `useAuth`: accede al estado y las acciones de autenticacion.

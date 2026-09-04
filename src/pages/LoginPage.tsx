@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../hooks/useAuth'
 import { API_URL } from '../types'
@@ -90,6 +90,9 @@ export function LoginPage() {
             />
             <Button type="submit" variant="contained" disabled={loading}>
               {loading ? 'Entrando…' : 'Iniciar sesión'}
+            </Button>
+            <Button component={RouterLink} to="/register" variant="text">
+              Crear una cuenta
             </Button>
           </Stack>
         </form>
