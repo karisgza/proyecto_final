@@ -1,10 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { httpClient } from './httpClient'
-import { updateTask, updateTaskStatus } from './taskService'
+import {
+  createTask,
+  deleteTask,
+  getTasks,
+  updateTask,
+  updateTaskStatus,
+} from './taskService'
 
 vi.mock('./httpClient', () => ({
   httpClient: {
+    delete: vi.fn(),
+    get: vi.fn(),
     patch: vi.fn(),
+    post: vi.fn(),
     put: vi.fn(),
   },
 }))
@@ -30,6 +39,41 @@ describe('taskService', () => {
       assigneeId: null,
     })
     expect(result).toEqual(task)
+  })
+
+  it('gets tasks for a project', async () => {
+    const tasks = [{ id: 1, title: 'Task one' }]
+    vi.mocked(httpClient.get).mockResolvedValue({ data: tasks } as never)
+
+    const result = await getTasks(7)
+
+    expect(httpClient.get).toHaveBeenCalledWith('/projects/7/tasks')
+    expect(result).toEqual(tasks)
+  })
+
+  it('creates a task for a project', async () => {
+    const task = { id: 1, title: 'New task' }
+    const body = {
+      title: 'New task',
+      status: 'TODO' as const,
+      priority: 'MED',
+      assigneeID: '',
+      dueDate: '2026-09-04',
+    }
+    vi.mocked(httpClient.post).mockResolvedValue({ data: task } as never)
+
+    const result = await createTask(7, body)
+
+    expect(httpClient.post).toHaveBeenCalledWith('/projects/7/tasks', body)
+    expect(result).toEqual(task)
+  })
+
+  it('deletes a task by id', async () => {
+    vi.mocked(httpClient.delete).mockResolvedValue({ data: undefined } as never)
+
+    await deleteTask(42)
+
+    expect(httpClient.delete).toHaveBeenCalledWith('/tasks/42')
   })
 
   it('updates only task status with PATCH', async () => {

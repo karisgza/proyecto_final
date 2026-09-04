@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { deleteProject, updateProject } from './projectService'
+import { createProject, deleteProject, getProjects, updateProject } from './projectService'
 import { httpClient } from './httpClient'
 
 vi.mock('./httpClient', () => ({
   httpClient: {
     delete: vi.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
     put: vi.fn(),
   },
 }))
@@ -20,6 +22,27 @@ describe('projectService', () => {
     await deleteProject(42)
 
     expect(httpClient.delete).toHaveBeenCalledWith('/projects/42')
+  })
+
+  it('gets all projects', async () => {
+    const projects = [{ id: 1, name: 'Project one' }]
+    vi.mocked(httpClient.get).mockResolvedValue({ data: projects } as never)
+
+    const result = await getProjects()
+
+    expect(httpClient.get).toHaveBeenCalledWith('/projects')
+    expect(result).toEqual(projects)
+  })
+
+  it('creates a project', async () => {
+    const project = { id: 1, name: 'New project' }
+    const body = { name: 'New project', description: 'Description' }
+    vi.mocked(httpClient.post).mockResolvedValue({ data: project } as never)
+
+    const result = await createProject(body)
+
+    expect(httpClient.post).toHaveBeenCalledWith('/projects', body)
+    expect(result).toEqual(project)
   })
 
   it('updates a project by id with PUT', async () => {
