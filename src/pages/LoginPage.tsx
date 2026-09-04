@@ -7,11 +7,13 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useToast } from '../context/ToastContext'
 import { useAuth } from '../hooks/useAuth'
 import { API_URL } from '../types'
 
 export function LoginPage() {
   const { login } = useAuth()
+  const { showToast } = useToast()
   const navigate = useNavigate()
   const [username, setUsername] = useState('ana')
   const [password, setPassword] = useState('ana123')
@@ -27,6 +29,7 @@ export function LoginPage() {
     setLoading(false)
 
     if (result.success) {
+      showToast('Bienvenido a TaskFlow')
       navigate('/dashboard')
     } else {
       setError(result.error ?? 'No se pudo iniciar sesión.')

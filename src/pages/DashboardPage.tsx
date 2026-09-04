@@ -1,5 +1,4 @@
 import AddIcon from '@mui/icons-material/Add'
-import LogoutIcon from '@mui/icons-material/Logout'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -11,10 +10,9 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { ProjectForm } from '../components/ProjectForm'
 import { ProjectList } from '../components/ProjectList'
-import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../context/ToastContext'
 import { useProjectForm } from '../hooks/useProjectForm'
 import { useProjects } from '../hooks/useProjects'
 import { getApiErrorMessage } from '../services/httpClient'
@@ -22,8 +20,7 @@ import { deleteProject, updateProject } from '../services/projectService'
 import type { Project } from '../types'
 
 export function DashboardPage() {
-  const { logout } = useAuth()
-  const navigate = useNavigate()
+  const { showToast } = useToast()
   const { projects, loading, error, refetch } = useProjects()
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -37,13 +34,9 @@ export function DashboardPage() {
     onSuccess: () => {
       refetch()
       setIsProjectFormOpen(false)
+      showToast('Proyecto creado')
     },
   })
-
-  function handleLogout() {
-    logout()
-    navigate('/login')
-  }
 
   async function handleDeleteProject(project: Project) {
     if (!window.confirm(`¿Seguro que deseas eliminar el proyecto "${project.name}"? Esta acción no se puede deshacer.`)) return
@@ -54,6 +47,7 @@ export function DashboardPage() {
     try {
       await deleteProject(project.id)
       refetch()
+      showToast('Proyecto eliminado')
     } catch (err) {
       setDeleteError(getApiErrorMessage(err))
     } finally {
@@ -82,6 +76,7 @@ export function DashboardPage() {
       })
       setEditingProject(null)
       refetch()
+      showToast('Proyecto actualizado')
     } catch (err) {
       setEditError(getApiErrorMessage(err))
     } finally {
@@ -96,40 +91,6 @@ export function DashboardPage() {
         backgroundColor: 'background.default',
       }}
     >
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '100%',
-            maxWidth: 960,
-            mx: 'auto',
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            boxSizing: 'border-box',
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            TaskFlow
-          </Typography>
-          <Button
-            component={RouterLink}
-            to="/dashboard"
-            sx={{ ml: 'auto', mr: 2, color: 'text.primary' }}
-          >
-            Proyectos
-          </Button>
-          <Button
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            color="inherit"
-          >
-            Log Out
-          </Button>
-        </Box>
-      </Box>
-
       <Box sx={{ maxWidth: 960, mx: 'auto', px: { xs: 2, sm: 3 }, py: { xs: 4, sm: 6 } }}>
         <Box
           sx={{

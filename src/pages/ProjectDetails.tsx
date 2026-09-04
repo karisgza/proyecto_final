@@ -18,13 +18,15 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import DeleteOutline from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { TaskForm } from '../components/TaskForm'
+import { useToast } from '../context/ToastContext'
 import { getApiErrorMessage } from '../services/httpClient'
 import { useProjects } from '../hooks/useProjects'
 import { useTaskForm } from '../hooks/useTaskForm'
-import { deleteTask, getTasks, updateTask, updateTaskStatus } from '../services/taskService'
+import { useTasks } from '../hooks/useTasks'
+import { deleteTask, updateTask, updateTaskStatus } from '../services/taskService'
 import type { Task, TaskStatus } from '../types'
 
 const SUN_YELLOW = '#F4C430'
@@ -39,10 +41,12 @@ function getPriorityColor(priority: string): 'success' | 'warning' | 'error' | '
 export function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const { projects, loading, error } = useProjects()
+  const { showToast } = useToast()
+  const numericId = id ? Number(id) : NaN
+  const projectId = Number.isFinite(numericId) ? numericId : undefined
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false)
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [tasksLoading, setTasksLoading] = useState(false)
-  const [tasksError, setTasksError] = useState<string | null>(null)
+  const [taskActionError, setTaskActionError] = useState<string | null>(null)
+  const { tasks, loading: tasksLoading, error: tasksError, refetch: refetchTasks } = useTasks(projectId)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [editingStatus, setEditingStatus] = useState<TaskStatus>('TODO')
   const [editingTitle, setEditingTitle] = useState('')
@@ -52,39 +56,12 @@ export function ProjectDetailsPage() {
   const [editingDueDate, setEditingDueDate] = useState('')
   const [editSaving, setEditSaving] = useState(false)
 
-  const numericId = id ? Number(id) : NaN
-  const projectId = Number.isFinite(numericId) ? numericId : undefined
-
-  const refreshTasks = useCallback(() => {
-    if (!projectId) return
-
-    let cancelled = false
-    setTasksLoading(true)
-    setTasksError(null)
-
-    getTasks(projectId)
-      .then((data) => {
-        if (!cancelled) setTasks(data)
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setTasksError(err instanceof Error ? err.message : 'Error al cargar tareas')
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setTasksLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [projectId])
-
   const taskForm = useTaskForm({
     projectId,
     onSuccess: () => {
       setIsTaskFormOpen(false)
-      refreshTasks()
+      refetchTasks()
+      showToast('Tarea creada')
     },
   })
 
@@ -95,10 +72,10 @@ const handleDeleteTask = async (taskId: number) => {
 
   try {
     await deleteTask(taskId)
-    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId))
-    setTasksError(null)
+    refetchTasks()
+    showToast('Tarea eliminada')
   } catch (err) {
-    setTasksError(err instanceof Error ? err.message : 'No se pudo eliminar la tarea.')
+    setTaskActionError(err instanceof Error ? err.message : 'No se pudo eliminar la tarea.')
   }
 }
   const openEditTask = (task: Task) => {
@@ -115,12 +92,12 @@ const handleDeleteTask = async (taskId: number) => {
     if (!editingTask) return
 
     if (editingTitle.trim().length < 3) {
-      setTasksError('El título debe tener al menos 3 caracteres.')
+      setTaskActionError('El título debe tener al menos 3 caracteres.')
       return
     }
 
     setEditSaving(true)
-    setTasksError(null)
+    setTaskActionError(null)
 
     try {
       const assigneeId = editingAssigneeID.trim()
@@ -142,34 +119,17 @@ const handleDeleteTask = async (taskId: number) => {
         await updateTaskStatus(editingTask.id, editingStatus)
       }
 
-      setTasks((currentTasks) =>
-        currentTasks.map((task) =>
-          task.id === editingTask.id
-            ? {
-                ...task,
-                title: editingTitle.trim(),
-                description: editingDescription.trim() || undefined,
-                priority: editingPriority,
-                assigneeID: editingAssigneeID.trim(),
-                dueDate: editingDueDate,
-                status: editingStatus,
-              }
-            : task,
-        ),
-      )
+      refetchTasks()
       setEditingTask(null)
+      showToast('Tarea actualizada')
     } catch (err) {
-      setTasksError(getApiErrorMessage(err))
+      setTaskActionError(getApiErrorMessage(err))
     } finally {
       setEditSaving(false)
     }
   }
 
   const project = projects.find((p) => p.id === numericId)
-
-  useEffect(() => {
-    refreshTasks()
-  }, [refreshTasks])
 
   if (loading) {
     return (
@@ -276,8 +236,8 @@ const handleDeleteTask = async (taskId: number) => {
                     Cargando tareas...
                   </Typography>
                 </Stack>
-              ) : tasksError ? (
-                <Alert severity="error">{tasksError}</Alert>
+              ) : tasksError || taskActionError ? (
+                <Alert severity="error">{tasksError || taskActionError}</Alert>
               ) : tasks.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
                   No hay tareas para este proyecto aún.
