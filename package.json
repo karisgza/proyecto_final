@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build": "tsc -b && vite build",
     "build:pages": "tsc -b && GITHUB_PAGES=true vite build && cp dist/index.html dist/404.html",
     "lint": "oxlint",
     "test": "vitest run",
@@ -16,7 +17,6 @@
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "axios": "^1.20.0",
-    "ci": "^2.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3",

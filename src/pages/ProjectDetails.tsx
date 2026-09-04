@@ -91,7 +91,7 @@ const handleDeleteTask = async (taskId: number) => {
     setEditingTitle(task.title)
     setEditingDescription(task.description ?? '')
     setEditingPriority(task.priority)
-    setEditingAssigneeID(String(task.assigneeId ?? task.assigneeID ?? ''))
+    setEditingAssigneeID(String(task.assigneeId))
     setEditingDueDate(task.dueDate ?? '')
     setEditingStatus(task.status ?? 'TODO')
   }
@@ -378,7 +378,7 @@ const handleDeleteTask = async (taskId: number) => {
 
                         <Stack spacing={0.25} sx={{ mt: 1.5 }}>
                           <Typography variant="caption" color="text.secondary">
-                            Encargado: {getAssigneeLabel(task.assigneeId ?? task.assigneeID)}
+                            Encargado: {getAssigneeLabel(task.assigneeId)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             Fecha límite: {task.dueDate || 'Sin fecha'}

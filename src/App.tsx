@@ -8,7 +8,7 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { Layout } from './Layout'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
-import { RegisterPage } from './pages/RegisterPage.tsx'
+import { RegisterPage } from './pages/RegisterPage'
 import { ProjectDetailsPage } from './pages/ProjectDetails'
 import { theme } from './theme'
 
