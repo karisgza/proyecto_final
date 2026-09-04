@@ -7,19 +7,48 @@ import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import { useEffect, useState } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
-import { fetchProject, fetchProjectTasks } from '../api/taskflowApi'
-import {useProjects, useTaskForm} from '../hooks'
+import { useProjects } from '../hooks/useProjects'
+import { getTasks } from '../services/taskService'
+import type { Task } from '../types'
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const projectId = Number(id)
+  const numericId = id ? Number(id) : NaN
+  const projectId = Number.isFinite(numericId) ? numericId : undefined
   const navigate = useNavigate()
+  const { projects, loading: projectsLoading, error: projectsError } = useProjects()
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasksLoading, setTasksLoading] = useState(false)
+  const [tasksError, setTasksError] = useState<string | null>(null)
 
-  const projectQuery = useProjects(() => fetchProject(projectId), [projectId])
-  const tasksQuery = useTaskForm(() => fetchProjectTasks(projectId), [projectId])
+  useEffect(() => {
+    if (!projectId) return
 
-  if (projectQuery.isLoading || tasksQuery.isLoading) {
+    let cancelled = false
+    setTasksLoading(true)
+    setTasksError(null)
+
+    getTasks(projectId)
+      .then((data) => {
+        if (!cancelled) setTasks(data)
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setTasksError(error instanceof Error ? error.message : 'Error al cargar tareas')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setTasksLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [projectId])
+
+  if (projectsLoading || tasksLoading) {
     return (
       <Box display="flex" justifyContent="center" py={4}>
         <CircularProgress />
@@ -27,12 +56,19 @@ export function ProjectDetailPage() {
     )
   }
 
-  if (projectQuery.error || !projectQuery.data) {
-    return <Alert severity="error">{projectQuery.error?.message ?? 'No encontrado'}</Alert>
+  if (projectsError || !projectId) {
+    return <Alert severity="error">{projectsError ?? 'No encontrado'}</Alert>
   }
 
-  const project = projectQuery.data
-  const tasks = tasksQuery.data ?? []
+  const project = projects.find((item) => item.id === projectId)
+
+  if (!project) {
+    return <Alert severity="error">No encontrado</Alert>
+  }
+
+  if (tasksError) {
+    return <Alert severity="error">{tasksError}</Alert>
+  }
 
   return (
     <Stack spacing={2} maxWidth={640}>
